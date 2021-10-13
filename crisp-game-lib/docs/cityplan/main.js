@@ -23,7 +23,7 @@ bybyb
 const S = {
 	WIDTH: 100,     // Game Width
   HEIGHT: 100,    // Game Height
-  GRIDSIZE: 10,   // Size of quares in the grid
+  GRIDSIZE: 10,    // Size of quares in the grid
   GRIDNUM: 8,     // Number of rows / columns in grid
   BOUNDX: 0,      // Grid buffer on x
   BOUNDY: 0       // Grid buffer on y
@@ -145,10 +145,10 @@ function buildingCheck(){
       const pos = key.split(",");
       const xpos = parseInt(pos[0]);
       const ypos = parseInt(pos[1]);
-      const up = [xpos, ypos-10].join(',');
-      const down = [xpos, ypos+10].join(',');
-      const left = [xpos-10, ypos].join(',');
-      const right = [xpos+10, ypos].join(',');
+      const up = [xpos, ypos-S.GRIDSIZE].join(',');
+      const down = [xpos, ypos+S.GRIDSIZE].join(',');
+      const left = [xpos-S.GRIDSIZE, ypos].join(',');
+      const right = [xpos+S.GRIDSIZE, ypos].join(',');
 
       // check surrounding spaces
       let condemnNum = 0;
