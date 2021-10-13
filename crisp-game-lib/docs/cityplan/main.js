@@ -5,11 +5,18 @@ description = `
 
 characters = [
 `
+ bbb 
+bb bb
+b   b
+b   b
 bbbbb
-b   b
-b   b
-b   b
-bbbbb
+`,
+`
+ bbb 
+yb by
+by yb
+b y b
+bybyb
 `,
 ];
 
@@ -50,7 +57,7 @@ function update() {
     }
   }
   
-  //Create Grid
+  //Draw Grid
   Filldict(S.GRIDNUM, S.GRIDSIZE, S.BOUNDX, S.BOUNDY);
 
   // Cursor
@@ -60,7 +67,9 @@ function update() {
   
   // Cursor collison check
   colCheck(mouse)
-  
+
+  // Building check test
+  buildingCheck();
 }
 
 /*function drawGrid(gSize,startx,starty){
@@ -90,10 +99,13 @@ function Filldict(num, size, boundx, boundy){
       // Draw Land
       color("green");
       rect(xpos, ypos, size, size);
-      // Draw Buildings
-      if(dict.get(tempS)=="house"){
+      // Draw Buildings (PROBS SHOULD MAKE THIS A SWITCH STATEMET)
+      if(dict.get(tempS)=="house"){ // House
         color("black");
         char('a', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
+      } else if(dict.get(tempS)=="chouse"){ //condemned house
+        color("black");
+        char('b', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
       }
     }
   }
@@ -119,6 +131,33 @@ function colCheck(mouse){
       dict.set(tempS, "house");
       color("black");
       char('a', xpos+3, ypos+3);
+    }
+  }
+}
+
+function buildingCheck(){
+  // Check each space on the grid
+  for (const [key, value] of dict) {
+      // THIS IS JUST AN EXAMPLE FOR NOW
+      // If a house has 2 more houses next to it, condemn it
+    if(value == "house"){
+      // Gt surrounding spaces
+      const pos = key.split(",");
+      const xpos = parseInt(pos[0]);
+      const ypos = parseInt(pos[1]);
+      const up = [xpos, ypos-10].join(',');
+      const down = [xpos, ypos+10].join(',');
+      const left = [xpos-10, ypos].join(',');
+      const right = [xpos+10, ypos].join(',');
+
+      // check surrounding spaces
+      let condemnNum = 0;
+      if(dict.get(up) == "house" || dict.get(up) == "chouse") condemnNum++;
+      if(dict.get(down) == "house" || dict.get(down) == "chouse") condemnNum++;
+      if(dict.get(left) == "house" || dict.get(left) == "chouse") condemnNum++;
+      if(dict.get(right) == "house" || dict.get(right) == "chouse") condemnNum++;
+      
+      if(condemnNum >= 2) dict.set(key, "chouse");
     }
   }
 }
