@@ -115,7 +115,8 @@ function update() {
     resetClock();
     //INSERT CODE HERE TO TRIGGER EVENT ON CLOCK COMPLETION
     randEmptyPlot();
-    buildingCheck();
+    //buildingCheck();
+    tetrisCheck();
   }
 
   // Cursor
@@ -199,7 +200,8 @@ function colCheck(mouse){
         bankArray.push(randBuilding()); //Adds new random building to the end of the array
 
         resetClock();
-        buildingCheck();
+        //buildingCheck();
+        tetrisCheck();
       }
     } else {
       // Highlight selected area with box
@@ -212,7 +214,7 @@ function colCheck(mouse){
   }
 }
 
-function buildingCheck(){
+/*function buildingCheck(){
   // Check each space on the grid
   for (const [key, value] of dict) {
     color("red");
@@ -226,16 +228,16 @@ function buildingCheck(){
     let scoreNum = 0;
     switch(value){
       case 'a':
-        /*RESIDENTIAL: "a"
-        * Worth 1 point
-        */
+        //RESIDENTIAL: "a"
+        //Worth 1 point
+        
         myAddScore(1, pos[0], pos[1], "red", 20);
         //addScore(1, pos);
         break;
       case 'b':
-        /*COMMERCIAL: "b"
-        * 1 point for each adjacent building
-        */
+        //COMMERCIAL: "b"
+        //1 point for each adjacent building
+        
         if(dict.get(up) != "empty") scoreNum++;
         if(dict.get(down) != "empty") scoreNum++;
         if(dict.get(left) != "empty") scoreNum++;
@@ -244,9 +246,9 @@ function buildingCheck(){
         myAddScore(scoreNum, pos[0], pos[1], "red", 20);
         break;
       case 'c':
-        /*INDUSTRIAL: "c"
-        * 5 points but -1 for each adjacent building that isn't another Industrial
-        */
+        //INDUSTRIAL: "c"
+        // 5 points but -1 for each adjacent building that isn't another Industrial
+        
         scoreNum = 5;
         if(dict.get(up) != "empty") scoreNum--;
         if(dict.get(down) != "empty") scoreNum--;
@@ -256,9 +258,9 @@ function buildingCheck(){
         myAddScore(scoreNum, pos[0], pos[1], "red", 20);
         break;
       case 'd':
-        /*RECREATIONAL: "d"
-        * +2 for each adjacent residential
-        */
+        //RECREATIONAL: "d"
+        // +2 for each adjacent residential
+        
         if(dict.get(up) == "a") scoreNum++;
         if(dict.get(down) == "a") scoreNum++;
         if(dict.get(left) == "a") scoreNum++;
@@ -266,6 +268,32 @@ function buildingCheck(){
         //addScore(scoreNum, pos);
         myAddScore(scoreNum, pos[0], pos[1], "red", 20);
         break;
+    }
+  }
+}*/
+
+function tetrisCheck(){
+  // Check each space on the grid
+  for (const [key, value] of dict) {
+    const pos = key.split(",");
+    const xpos = parseInt(pos[0]);
+    const ypos = parseInt(pos[1]);
+    const right = [xpos+S.GRIDSIZE, ypos].join(',');
+    const down = [xpos, ypos+S.GRIDSIZE].join(',');
+    const diagonal = [xpos+S.GRIDSIZE, ypos+S.GRIDSIZE].join(',');
+    let scoreNum = 0;
+    // Check for 4 near
+    if(dict.get(key) != "empty") scoreNum++;
+    if(dict.get(right) != "empty") scoreNum++;
+    if(dict.get(down) != "empty") scoreNum++;
+    if(dict.get(diagonal) != "empty") scoreNum++;
+    if(scoreNum == 4) {
+      myAddScore(1, pos[0], pos[1], "red", 20);
+      // Clear all spaces
+      dict.set(key, "empty")
+      dict.set(right, "empty")
+      dict.set(down, "empty")
+      dict.set(diagonal, "empty")
     }
   }
 }
