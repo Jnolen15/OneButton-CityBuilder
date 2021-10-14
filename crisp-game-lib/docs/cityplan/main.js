@@ -1,6 +1,7 @@
 title = "cityplan";
 
-description = `
+description = `   [TAP] to 
+   place building
 `;
 
 characters = [
@@ -76,6 +77,8 @@ let dict = new Map();
 let cursor;
 let bankArray = [];
 let tickCount = 0;
+let clockWidth = (S.GRIDSIZE)+1;
+let clockspeed = 10; //the number of ticks between clock incremental increase
 
 function update() {
   if (!ticks) {
@@ -99,6 +102,13 @@ function update() {
   }
   //Increase clock
   tickCount++;
+  if(tickCount%clockspeed == 0) {
+    clockWidth++;
+  }
+  if(clockWidth > (S.GRIDSIZE/2+1)+S.GRIDSIZE+1+(S.GRIDSIZE)-2) { //Once clock cycle completes, reset
+    clockWidth = S.GRIDSIZE+1;
+    //INSERT CODE HERE TO TRIGGER EVENT ON CLOCK COMPLETION
+  }
   
   //Draw Grid
   Filldict(S.GRIDNUM, S.GRIDSIZE, S.BOUNDX, S.BOUNDY);
@@ -112,7 +122,7 @@ function update() {
   renderBank();
 
   // Render Clock
-  // renderClock();
+  renderClock();
   
   // Cursor collison check
   colCheck(mouse)
@@ -224,11 +234,13 @@ function genBank(){
   return returnArray;
 }
 
+//Return a random building
 function randBuilding(){
   let buildingIndex = [B.RESIDENTIAL,B.COMMERCIAL,B.INDUSTRIAL,B.RECREATIONAL]
   return buildingIndex[Math.floor(Math.random()*buildingIndex.length)]
 }
 
+//Draw the bank
 function renderBank(){
   let x = (S.WIDTH/S.GRIDSIZE)+(S.GRIDSIZE*2);
   let y = (S.GRIDSIZE*S.GRIDNUM)+S.GRIDSIZE;
@@ -236,12 +248,12 @@ function renderBank(){
   let h = S.GRIDSIZE;
   let o = 1;
 
-  color("black");
+  color("black"); //Draw the outline
   rect(x,y,w,h);
-  color("white");
+  color("white"); //Draw the inner white rectangle
   rect(x+o,y+o,w-(2*o),h-(2*o));
 
-  color("black");
+  color("black"); //Draw the buildings in the bank
   let i = 0;
   for(const element of bankArray) {
     char(element,(x+(S.GRIDSIZE*i))+(4*o),y+(S.GRIDSIZE/2));
@@ -251,5 +263,14 @@ function renderBank(){
 }
 
 function renderClock(){
-  arc((S.WIDTH/S.GRIDSIZE)+(S.GRIDSIZE),(S.GRIDSIZE*S.GRIDNUM)+S.GRIDSIZE,4,3,0,8);
+  //Draw red rectangle
+  let x = S.GRIDSIZE;
+  let y = S.HEIGHT-S.GRIDSIZE+2;
+  let h = S.GRIDSIZE/2+1;
+  color("red");
+  rect(x,y,x+h,h);
+  //Draw white rectangle on top
+  color("white")
+  let w = (x-2)-(clockWidth-(x+1));
+  rect(clockWidth,y+1,w+h,h-2);
 }
