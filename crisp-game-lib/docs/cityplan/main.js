@@ -6,20 +6,6 @@ description = `   [TAP] to
 
 characters = [
 `
- bbb 
-bb bb
-b   b
-b   b
-bbbbb
-`,
-`
- bbb 
-yb by
-by yb
-b y b
-bybyb
-`,
-`
   l  
  lPl
 lPPPl
@@ -52,17 +38,17 @@ lylyl
 const S = {
 	WIDTH: 100,     // Game Width
   HEIGHT: 100,    // Game Height
-  GRIDSIZE: 10,    // Size of quares in the grid
-  GRIDNUM: 8,     // Number of rows / columns in grid
+  GRIDSIZE: 10,    // Size of quares in the grid (10 is a good numer)
+  GRIDNUM: 8,     // Number of rows / columns in grid (8 is a good numer)
   BOUNDX: 0,      // Grid buffer on x
   BOUNDY: 0,       // Grid buffer on y
 };
 
 const B = {
-  RESIDENTIAL: "c",
-  COMMERCIAL: "d",
-  INDUSTRIAL: "e",
-  RECREATIONAL: "f",
+  RESIDENTIAL: "a",
+  COMMERCIAL: "b",
+  INDUSTRIAL: "c",
+  RECREATIONAL: "d",
 }
 
 options = {
@@ -79,6 +65,21 @@ let bankArray = [];
 let tickCount = 0;
 let clockWidth = (S.GRIDSIZE)+1;
 let clockspeed = 10; //the number of ticks between clock incremental increase
+
+//SCORE TYPE AND FUNCTIONS COURTESY OF COLON O'ROURKE (Modified with permission)
+/**
+ * @typedef {{
+ * pos: Vector,
+ * age: number,
+ * score: number,
+ * color: string,
+ * }} Score
+ */
+
+/**
+ * @type { Score []}
+ */
+let scores;
 
 function update() {
   if (!ticks) {
@@ -98,7 +99,13 @@ function update() {
 
     //Generate initial bank
     bankArray = this.genBank();
+
+    scores = [];
   }
+
+  //Draw Grid
+  Filldict(S.GRIDNUM, S.GRIDSIZE, S.BOUNDX, S.BOUNDY);
+
   //Increase clock
   tickCount++;
   if(tickCount%clockspeed == 0) {
@@ -108,10 +115,8 @@ function update() {
     resetClock();
     //INSERT CODE HERE TO TRIGGER EVENT ON CLOCK COMPLETION
     randEmptyPlot();
+    buildingCheck();
   }
-  
-  //Draw Grid
-  Filldict(S.GRIDNUM, S.GRIDSIZE, S.BOUNDX, S.BOUNDY);
 
   // Cursor
   color("light_purple");
@@ -125,28 +130,19 @@ function update() {
   renderClock();
   
   // Cursor collison check
-  colCheck(mouse)
+  colCheck(mouse);
 
-  // Building check test
-  buildingCheck();
+  //SCORE TYPE AND FUNCTIONS COURTESY OF COLON O'ROURKE (Modified with permission)
+  remove(scores, (s) => {
+    // @ts-ignore
+    color(s.color);
+    //s.pos.y -= 0.1
+    text(" " + s.score, s.pos)
+    s.age -= 1
+    let disappear = (s.age <= 0)
+    return disappear
+  })
 }
-
-/*function drawGrid(gSize,startx,starty){
-  color("red");
-  for(let x = 0; x <= S.WIDTH; x += gSize){
-    // console.log("x=" + x);
-    line(x,starty,x,S.HEIGHT,1);
-    line(x,starty+1,x,S.HEIGHT+1,1);
-    line(x,starty+2,x,S.HEIGHT+2,1);
-  }
-  for(let y = 0; y <= S.HEIGHT; y += gSize){
-    // console.log("y="+ y);
-    // console.log("x=" + x + " y="+ y);
-    line(startx,y,S.WIDTH,y,1);
-    line(startx+1,y,S.WIDTH+1,y,1);
-    line(startx+2,y,S.WIDTH+2,y,1);
-  }
-}*/
 
 function Filldict(num, size, boundx, boundy){
   for(let i = 1; i <= num; i++){
@@ -158,17 +154,24 @@ function Filldict(num, size, boundx, boundy){
       // Draw Land
       color("green");
       rect(xpos, ypos, size, size);
-      // Draw Buildings (PROBS SHOULD MAKE THIS A SWITCH STATEMET)
-      if(dict.get(tempS)=="house"){ // House
-        color("black");
-        char('a', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
-      } else if(dict.get(tempS)=="chouse"){ //condemned house
-        color("black");
-        char('b', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
+      // Draw Buildings
+      color("black");
+      switch(dict.get(tempS)){
+        case 'a':
+          char('a', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
+          break;
+        case 'b':
+          char('b', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
+          break;
+        case 'c':
+          char('c', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
+          break;
+        case 'd':
+          char('d', xpos+(S.GRIDSIZE/2), ypos+(S.GRIDSIZE/2));
+          break;
       }
     }
   }
-  //console.log(dict)
 }
 
 function colCheck(mouse){
@@ -178,23 +181,33 @@ function colCheck(mouse){
     const tempA = [xpos, ypos];
     const tempS = tempA.join(',');
 
-    // Highlight selected area with box
-    color("yellow");
-    rect(xpos, ypos, 1, S.GRIDSIZE);
-    rect(xpos, ypos, S.GRIDSIZE, 1);
-    rect(xpos+S.GRIDSIZE, ypos, 1, S.GRIDSIZE);
-    rect(xpos, ypos+S.GRIDSIZE, S.GRIDSIZE+1, 1);
+    if(dict.get(tempS) == "empty"){
+      // Highlight selected area with box
+      color("yellow");
+      rect(xpos, ypos, 1, S.GRIDSIZE);
+      rect(xpos, ypos, S.GRIDSIZE, 1);
+      rect(xpos+S.GRIDSIZE, ypos, 1, S.GRIDSIZE);
+      rect(xpos, ypos+S.GRIDSIZE, S.GRIDSIZE+1, 1);
 
-    // Place building
-    if(input.isJustPressed){
-      // dict.set(tempS, bankArray[0]) //Feel free to fix, bankArray[0] always has the building next up in the queue
-      popBank();
+      // Place building
+      if(input.isJustPressed){
+        dict.set(tempS, bankArray[0]) //Feel free to fix, bankArray[0] always has the building next up in the queue
+        color("black");
+        char(bankArray[0], xpos+3, ypos+3);
 
-      dict.set(tempS, "house");
-      color("black");
-      char('a', xpos+3, ypos+3);
+        bankArray.splice(0,1); //Clears top building from stack
+        bankArray.push(randBuilding()); //Adds new random building to the end of the array
 
-      resetClock();
+        resetClock();
+        buildingCheck();
+      }
+    } else {
+      // Highlight selected area with box
+      color("light_red");
+      rect(xpos, ypos, 1, S.GRIDSIZE);
+      rect(xpos, ypos, S.GRIDSIZE, 1);
+      rect(xpos+S.GRIDSIZE, ypos, 1, S.GRIDSIZE);
+      rect(xpos, ypos+S.GRIDSIZE, S.GRIDSIZE+1, 1);
     }
   }
 }
@@ -202,26 +215,57 @@ function colCheck(mouse){
 function buildingCheck(){
   // Check each space on the grid
   for (const [key, value] of dict) {
-      // THIS IS JUST AN EXAMPLE FOR NOW
-      // If a house has 2 more houses next to it, condemn it
-    if(value == "house"){
-      // Gt surrounding spaces
-      const pos = key.split(",");
-      const xpos = parseInt(pos[0]);
-      const ypos = parseInt(pos[1]);
-      const up = [xpos, ypos-S.GRIDSIZE].join(',');
-      const down = [xpos, ypos+S.GRIDSIZE].join(',');
-      const left = [xpos-S.GRIDSIZE, ypos].join(',');
-      const right = [xpos+S.GRIDSIZE, ypos].join(',');
-
-      // check surrounding spaces
-      let condemnNum = 0;
-      if(dict.get(up) == "house" || dict.get(up) == "chouse") condemnNum++;
-      if(dict.get(down) == "house" || dict.get(down) == "chouse") condemnNum++;
-      if(dict.get(left) == "house" || dict.get(left) == "chouse") condemnNum++;
-      if(dict.get(right) == "house" || dict.get(right) == "chouse") condemnNum++;
-      
-      if(condemnNum >= 2) dict.set(key, "chouse");
+    color("red");
+    const pos = key.split(",");
+    const xpos = parseInt(pos[0]);
+    const ypos = parseInt(pos[1]);
+    const up = [xpos, ypos-S.GRIDSIZE].join(',');
+    const down = [xpos, ypos+S.GRIDSIZE].join(',');
+    const left = [xpos-S.GRIDSIZE, ypos].join(',');
+    const right = [xpos+S.GRIDSIZE, ypos].join(',');
+    let scoreNum = 0;
+    switch(value){
+      case 'a':
+        /*RESIDENTIAL: "a"
+        * Worth 1 point
+        */
+        myAddScore(1, pos[0], pos[1], "red", 20);
+        //addScore(1, pos);
+        break;
+      case 'b':
+        /*COMMERCIAL: "b"
+        * 1 point for each adjacent building
+        */
+        if(dict.get(up) != "empty") scoreNum++;
+        if(dict.get(down) != "empty") scoreNum++;
+        if(dict.get(left) != "empty") scoreNum++;
+        if(dict.get(right) != "empty") scoreNum++;
+        //addScore(scoreNum, pos);
+        myAddScore(scoreNum, pos[0], pos[1], "red", 20);
+        break;
+      case 'c':
+        /*INDUSTRIAL: "c"
+        * 5 points but -1 for each adjacent building that isn't another Industrial
+        */
+        scoreNum = 5;
+        if(dict.get(up) != "empty") scoreNum--;
+        if(dict.get(down) != "empty") scoreNum--;
+        if(dict.get(left) != "empty") scoreNum--;
+        if(dict.get(right) != "empty") scoreNum--;
+        //addScore(scoreNum, pos);
+        myAddScore(scoreNum, pos[0], pos[1], "red", 20);
+        break;
+      case 'd':
+        /*RECREATIONAL: "d"
+        * +2 for each adjacent residential
+        */
+        if(dict.get(up) == "a") scoreNum++;
+        if(dict.get(down) == "a") scoreNum++;
+        if(dict.get(left) == "a") scoreNum++;
+        if(dict.get(right) == "a") scoreNum++;
+        //addScore(scoreNum, pos);
+        myAddScore(scoreNum, pos[0], pos[1], "red", 20);
+        break;
     }
   }
 }
@@ -301,4 +345,16 @@ function randEmptyPlot(){
   let plotToBuild = emptyPlotArray[Math.floor(Math.random()*emptyPlotArray.length)];
   dict.set(plotToBuild, popBank());
   // return emptyPlotArray;
+}
+
+//SCORE TYPE AND FUNCTIONS COURTESY OF COLON O'ROURKE (Modified with permission)
+function myAddScore(value, x = S.WIDTH/2, y = S.HEIGHT/2, color, time = 60){
+  let score = {
+    pos: vec(x,y),
+    age: time,
+    score: value,
+    color: color
+  }
+  scores.push(score)
+  addScore(value);
 }
