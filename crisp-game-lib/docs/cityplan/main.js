@@ -18,6 +18,34 @@ by yb
 b y b
 bybyb
 `,
+`
+  l  
+ lPl
+lPPPl
+lPlPl
+lPlPl
+`,
+`
+     
+lllll
+bbbbb
+blblb
+bbblb
+`,
+`
+  l l
+ lyly
+lyyyy
+lylyl
+lylyl
+`,
+`
+ GGG 
+ GGG
+ GGG
+  l 
+  l
+`
 ];
 
 const S = {
@@ -26,8 +54,15 @@ const S = {
   GRIDSIZE: 10,    // Size of quares in the grid
   GRIDNUM: 8,     // Number of rows / columns in grid
   BOUNDX: 0,      // Grid buffer on x
-  BOUNDY: 0       // Grid buffer on y
+  BOUNDY: 0,       // Grid buffer on y
 };
+
+const B = {
+  RESIDENTIAL: "c",
+  COMMERCIAL: "d",
+  INDUSTRIAL: "e",
+  RECREATIONAL: "f",
+}
 
 options = {
   viewSize: {
@@ -39,6 +74,8 @@ options = {
 // Declaring stuff
 let dict = new Map();
 let cursor;
+let bankArray = [];
+let tickCount = 0;
 
 function update() {
   if (!ticks) {
@@ -55,7 +92,13 @@ function update() {
         dict.set(tempS, "empty");
       }
     }
+
+    //Generate initial bank
+    bankArray = this.genBank();
+    console.log(bankArray);
   }
+  //Increase clock
+  tickCount++;
   
   //Draw Grid
   Filldict(S.GRIDNUM, S.GRIDSIZE, S.BOUNDX, S.BOUNDY);
@@ -64,6 +107,12 @@ function update() {
   color("light_purple");
   let mouse = rect(cursor, 1, 1);
   cursor = vec(input.pos.x - (input.pos.x % S.GRIDSIZE), input.pos.y - (input.pos.y % S.GRIDSIZE));
+
+  // Render Bank
+  renderBank();
+
+  // Render Clock
+  // renderClock();
   
   // Cursor collison check
   colCheck(mouse)
@@ -128,6 +177,10 @@ function colCheck(mouse){
 
     // Place building
     if(input.isJustPressed){
+      // dict.set(tempS, bankArray[0]) //Feel free to fix, bankArray[0] always has the building next up in the queue
+      bankArray.splice(0,1); //Clears top building from stack
+      bankArray.push(randBuilding()); //Adds new random building to the end of the array
+
       dict.set(tempS, "house");
       color("black");
       char('a', xpos+3, ypos+3);
@@ -160,4 +213,43 @@ function buildingCheck(){
       if(condemnNum >= 2) dict.set(key, "chouse");
     }
   }
+}
+
+//Generate initial bank
+function genBank(){
+  let returnArray = [];
+  for(let i = 0; i < 4; i++) {
+    returnArray.push(randBuilding());
+  }
+  return returnArray;
+}
+
+function randBuilding(){
+  let buildingIndex = [B.RESIDENTIAL,B.COMMERCIAL,B.INDUSTRIAL,B.RECREATIONAL]
+  return buildingIndex[Math.floor(Math.random()*buildingIndex.length)]
+}
+
+function renderBank(){
+  let x = (S.WIDTH/S.GRIDSIZE)+(S.GRIDSIZE*2);
+  let y = (S.GRIDSIZE*S.GRIDNUM)+S.GRIDSIZE;
+  let w = ((S.WIDTH/S.GRIDSIZE)*S.GRIDNUM)-(S.GRIDSIZE*4);
+  let h = S.GRIDSIZE;
+  let o = 1;
+
+  color("black");
+  rect(x,y,w,h);
+  color("white");
+  rect(x+o,y+o,w-(2*o),h-(2*o));
+
+  color("black");
+  let i = 0;
+  for(const element of bankArray) {
+    char(element,(x+(S.GRIDSIZE*i))+(4*o),y+(S.GRIDSIZE/2));
+    i++;
+  }
+  text("bank",x+(S.GRIDSIZE*4)+(3*o),y+(S.GRIDSIZE/2));
+}
+
+function renderClock(){
+  arc((S.WIDTH/S.GRIDSIZE)+(S.GRIDSIZE),(S.GRIDSIZE*S.GRIDNUM)+S.GRIDSIZE,4,3,0,8);
 }
