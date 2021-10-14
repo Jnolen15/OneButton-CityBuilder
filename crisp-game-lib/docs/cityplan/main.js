@@ -98,7 +98,6 @@ function update() {
 
     //Generate initial bank
     bankArray = this.genBank();
-    console.log(bankArray);
   }
   //Increase clock
   tickCount++;
@@ -106,8 +105,9 @@ function update() {
     clockWidth++;
   }
   if(clockWidth > (S.GRIDSIZE/2+1)+S.GRIDSIZE+1+(S.GRIDSIZE)-2) { //Once clock cycle completes, reset
-    clockWidth = S.GRIDSIZE+1;
+    resetClock();
     //INSERT CODE HERE TO TRIGGER EVENT ON CLOCK COMPLETION
+    randEmptyPlot();
   }
   
   //Draw Grid
@@ -188,12 +188,13 @@ function colCheck(mouse){
     // Place building
     if(input.isJustPressed){
       // dict.set(tempS, bankArray[0]) //Feel free to fix, bankArray[0] always has the building next up in the queue
-      bankArray.splice(0,1); //Clears top building from stack
-      bankArray.push(randBuilding()); //Adds new random building to the end of the array
+      popBank();
 
       dict.set(tempS, "house");
       color("black");
       char('a', xpos+3, ypos+3);
+
+      resetClock();
     }
   }
 }
@@ -262,6 +263,13 @@ function renderBank(){
   text("bank",x+(S.GRIDSIZE*4)+(3*o),y+(S.GRIDSIZE/2));
 }
 
+function popBank(){
+  let buildingType = bankArray[0];
+  bankArray.splice(0,1); //Clears top building from stack
+  bankArray.push(randBuilding()); //Adds new random building to the end of the array
+  return buildingType;
+}
+
 function renderClock(){
   //Draw red rectangle
   let x = S.GRIDSIZE;
@@ -273,4 +281,24 @@ function renderClock(){
   color("white")
   let w = (x-2)-(clockWidth-(x+1));
   rect(clockWidth,y+1,w+h,h-2);
+}
+
+function resetClock(){
+  clockWidth = S.GRIDSIZE+1;
+}
+
+function randEmptyPlot(){
+  let emptyPlotArray = [];
+  let dictIterator = dict.entries();
+
+  for(const element of dictIterator) {
+    let key = element[0];
+    let value = element[1];
+    if(value == "empty"){
+      emptyPlotArray.push(key);
+    }
+  }
+  let plotToBuild = emptyPlotArray[Math.floor(Math.random()*emptyPlotArray.length)];
+  dict.set(plotToBuild, popBank());
+  // return emptyPlotArray;
 }
