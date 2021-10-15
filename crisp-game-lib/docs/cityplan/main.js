@@ -1,7 +1,10 @@
 title = "cityplan";
 
-description = `   [TAP] to 
-   place building
+description = `   
+  [TAP] to 
+  place building.
+  Make unique 2x2
+  groups to clear.
 `;
 
 characters = [
@@ -58,6 +61,9 @@ options = {
   },
   isPlayingBgm: true,
   seed: 20,
+  isReplayEnabled: true,
+  isDrawingParticleFront: true,
+  isDrawingScoreFront: true
 };
 
 // Declaring stuff
@@ -66,7 +72,8 @@ let cursor;
 let bankArray = [];
 let tickCount = 0;
 let clockWidth = (S.GRIDSIZE)+1;
-let clockspeed = 10; //the number of ticks between clock incremental increase
+let clockspeed = 25; //the number of ticks between clock incremental increase
+let clockIncrease = 1;
 
 //SCORE TYPE AND FUNCTIONS COURTESY OF COLON O'ROURKE (Modified with permission)
 /**
@@ -204,6 +211,7 @@ function colCheck(mouse){
 
         resetClock();
         play("jump");
+        //particle(xpos, ypos);
         tetrisCheck();
         fullGridTest();
       }
@@ -295,6 +303,10 @@ function tetrisCheck(){
     if(scoreNum == 4 && diffCheck(key,right,down,diagonal)) {
       myAddScore(1, pos[0], pos[1], "red", 20);
       play("coin");
+      particle(pos[0], pos[1]);
+      // Icrease difficulty
+      if(clockspeed > 8) clockspeed -= clockIncrease;
+      if(clockspeed <= 8) clockspeed = 8;
 
       // Clear all spaces
       dict.set(key, "empty")
