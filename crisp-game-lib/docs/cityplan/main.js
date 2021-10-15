@@ -55,7 +55,9 @@ options = {
   viewSize: {
   x: S.WIDTH,
   y: S.HEIGHT,
-  }
+  },
+  isPlayingBgm: true,
+  seed: 20,
 };
 
 // Declaring stuff
@@ -115,8 +117,9 @@ function update() {
     resetClock();
     //INSERT CODE HERE TO TRIGGER EVENT ON CLOCK COMPLETION
     randEmptyPlot();
-    //buildingCheck();
+    play("explosion");
     tetrisCheck();
+    fullGridTest();
   }
 
   // Cursor
@@ -200,8 +203,9 @@ function colCheck(mouse){
         bankArray.push(randBuilding()); //Adds new random building to the end of the array
 
         resetClock();
-        //buildingCheck();
+        play("jump");
         tetrisCheck();
+        fullGridTest();
       }
     } else {
       // Highlight selected area with box
@@ -287,8 +291,11 @@ function tetrisCheck(){
     if(dict.get(right) != "empty") scoreNum++;
     if(dict.get(down) != "empty") scoreNum++;
     if(dict.get(diagonal) != "empty") scoreNum++;
-    if(scoreNum == 4) {
+
+    if(scoreNum == 4 && diffCheck(key,right,down,diagonal)) {
       myAddScore(1, pos[0], pos[1], "red", 20);
+      play("coin");
+
       // Clear all spaces
       dict.set(key, "empty")
       dict.set(right, "empty")
@@ -373,6 +380,35 @@ function randEmptyPlot(){
   let plotToBuild = emptyPlotArray[Math.floor(Math.random()*emptyPlotArray.length)];
   dict.set(plotToBuild, popBank());
   // return emptyPlotArray;
+}
+
+//Determines whether the four adjacent plots are unique amongst eachother
+function diffCheck(topL,topR,botL,botR){
+  let keys = [topL,topR,botL,botR];
+  let vals = [];
+  for(const k of keys){
+    vals.push(dict.get(k));
+  }
+  let uniques = [... new Set(vals)] //Creates new array with only unique entries
+  if(uniques.length == 4) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+function fullGridTest(){
+  let dictIterator = dict.entries();
+  let emptyExists = false;
+
+  for(const element of dictIterator) {
+    if(element[1] == "empty"){
+      emptyExists = true;
+    }
+  }
+  if(!emptyExists){
+    end();
+  }
 }
 
 //SCORE TYPE AND FUNCTIONS COURTESY OF COLON O'ROURKE (Modified with permission)
